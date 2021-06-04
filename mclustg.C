@@ -89,7 +89,7 @@ void mclustg::Loop()
 
    Long64_t nshow = fChain->GetEntriesFast();
     cout << " nshow: " << nshow << endl;
-   nshow = 1;   //-
+   nshow = 10;   //-
    cout << "nShowers " << nshow << endl;
     
    Long64_t nbytes = 0, nb = 0;
@@ -113,7 +113,7 @@ void mclustg::Loop()
     //  5 6      mu- mu+
     //  13 14    n p
 // ================================================================================
-    Int_t   ncont=0, n=0, nsecp, nasep, icont=0, ntsep=0;
+    Int_t   ncont=0, n=0, nsecp, nasep=0, icont=0, ntsep=0;
     Int_t   tag=-1, icshow, iclust=0, cmult, cmultp1,
             iclems=0, iclmus=0, iclmxs=0, iclots=0,    // cluster count in showers
             iclemt=0, iclmut=0, iclmxt=0, iclott=0;    // total cluster count
@@ -357,6 +357,7 @@ void mclustg::Loop()
                 //cout << "a[" << j << "][" << k << "]: ";
                 //std::cout<<"matriz="<< pgrid[i][j][k]<<endl;
                 }
+    cout << "Line 360" << endl;
     
     for(Int_t i=0; i<nshow; i++ )
         for(Int_t j=0; j<nbox; j++ )
@@ -370,6 +371,7 @@ void mclustg::Loop()
                 //cout << "a[" << j << "][" << k << "]: ";
                 //std::cout<<"matriz="<< pgrid[i][j][k]<<endl;
                 }
+    cout << "Line 370" << endl;
     
     for(Int_t i=0; i<nbox; i++ )
         for(Int_t j=0; j<nbox; j++  ){
@@ -380,6 +382,7 @@ void mclustg::Loop()
             rgrid[i][j] = rsign * rgrid[i][j];
                 // cout << "--- rgrid:  " << rgrid[i][j] << endl;
             }
+    cout << "Line 380" << endl;
     
     for(Int_t i=0; i<nbox; i++  ){
         rpart[i]=0;  // radial distribution of all particles
@@ -388,10 +391,14 @@ void mclustg::Loop()
         rcltm[i]=0;  // radial distribution of all particles
         rcltx[i]=0;  // radial distribution of all particles
     }
+
+    cout << "Start loop on showers" << endl;
         
     for (Long64_t ishow=0; ishow<nshow; ishow++) {
-       // cout << " *** new shower " << ishow+1 << endl;
+       cout << " *** new shower " << ishow+1 << endl;
        Long64_t itree = LoadTree(ishow);
+
+       cout << "itree: " << itree << endl;
        
        if (itree < 0) break;
        
@@ -419,7 +426,7 @@ void mclustg::Loop()
        Float_t arr5[100000] = { [0 ... 99999] = -10. };
        Float_t arr6[100000] = { [0 ... 99999] = -10. };
        Float_t itag[100000] = { [0 ... 99999] =  -1. };
-        //cout << " Punto 2" << endl;
+       cout << "Defined arrays of size 100000" << endl;
 // =========================================================================
        cmult = 1;
        icshow = 0;
@@ -435,12 +442,13 @@ void mclustg::Loop()
            }
        }
    
+   cout << "Loop on all ptcles ("<< particle__ <<"): " << endl;
    // First loop in  all particles ===================
    for(Int_t ip=0; ip < particle__; ip++){
        
        pid = particle__ParticleID[ip];
        
-       //cout << " Punto 3a" << endl;
+       cout << ip << ", ";
        
        rx        = particle__x[ip]/100;   // meters
        ry        = particle__y[ip]/100;   // meters
@@ -461,6 +469,7 @@ void mclustg::Loop()
               
        if (irow<0 | icol<0 | irow+1>nbox | icol+1>nbox){
            itag[ip]++;
+           cout << "continued" << endl;
            continue;
        }
        
@@ -563,13 +572,20 @@ void mclustg::Loop()
     
        
    }    // end of first scan of particles
+   cout << "\nEnd loop of all particles" << endl;
         
    ntsep  = ntsep + nsecp;   // total nb. secondary part.
           
    // Second loop in the accepted particles ==========
+   cout << "Loop on accepted ptcles ("<< nasep <<")" << endl;
    for(Int_t ifp=0; ifp<nasep; ifp++){
        
-       if(itag[ifp]!=-1) continue;
+       cout << "ifp ("<< ifp <<") < nasep("<< nasep <<")" << endl;
+       if(itag[ifp]!=-1) { 
+           cout << "itag[ifp] == " << itag[ifp] << " !=-1  =>  continue" << endl; 
+           continue;
+       }
+
        itag[ifp]++;
 
        idp1  = arr0[ifp];
@@ -881,6 +897,7 @@ void mclustg::Loop()
        xf = 0; xl = 0; yf = 0; yl = 0;
        
     }  // ends ifp loop
+   cout << "End loop of accepted particles" << endl;
 
     for(Int_t i=0; i < 100000; i++){
        itag[i]=-1;
@@ -1014,6 +1031,7 @@ void mclustg::Loop()
         //<< ry <<endl;
        
     } // end of for-loop in showers
+    cout << "End loop showers" << endl;
     
     ofrpart << nshow << "\t" << flint << "\t" << len << "\t" << nbox << "\t";
     ofrclst << nshow << "\t" << flint << "\t" << len << "\t" << nbox << "\t";
@@ -1065,6 +1083,10 @@ ofpart<< mpcr  << "\t"
     ofshws.close();
     ofpart.close();
     
+    // cout << "rcltx: [";
+    // for (int i=0; i < nbox; i++) cout << rcltx[i] << ", ";
+    // cout << " ]" << endl;
+
     printf("******  Proceso completado  ******");
     cout << endl;
     
@@ -1085,6 +1107,87 @@ ofpart<< mpcr  << "\t"
     //TH2D *h1 = new TH2D("h1", "cluster distribution", 100, 0., 1000., 100, 0., 1000.);
         
 // Estimamos densidades de particulas y sigmas correspondientes
+
+
+
+    // =====================   P L O T S   ====================================== //
+
+    // Create Total and normalized arrays pgrid and cgrid
+    Float_t pgridtn[nbox][nbox] = { 0 }; // pgrid total normalized 
+    Float_t cgridtn[nbox][nbox] = { 0 }; // cgrid total normalized  
+
+    for (int s=0; s<nshow; s++){
+        for (int i=0; i < nbox; i++) {
+            for (int j=0; j < nbox; j++) {
+                pgridtn[i][j] += (float)pgrid[s][i][j] / nshow;
+                cgridtn[i][j] += (float)cgrid[s][i][j] / nshow;
+                // if (pgrid[s][i][j] != 0) cout << "pgrid["<<s<<"]["<<i<<"]["<<j<<"] ("<<pgrid[s][i][j]<<") / nshow ("<<nshow<<") = "<< (float)pgrid[s][i][j] / nshow << endl;
+            }
+        }
+    }
+
+    // cout << "pgridtn: [ ";
+    // for (int i=0; i < nbox; i++) {
+    //     for (int j=0; j < nbox; j++) {
+    //         if (pgridtn[i][j] != 0) cout << pgridtn[i][j] << ", ";
+    //     }
+    // }
+    // cout << "]" << endl;
+
+    // 2 D   H I S T O G R A M  (pgridtn)
+    //
+    // Create Canvas (window)
+    auto c1    = new TCanvas("c1","c1",600,400);
+
+    // Create 2D Histogram with TH2F
+    //                     Name  | Title         | xbins | xmin | xmax | ybins | ymin | ymax
+    auto hcol1 = new TH2F("hcol1", "2D Histogram", nbox  , 0    , nbox , nbox  , 0    , nbox);
+
+    // Fill the 2D histogram with pgridtn values
+    for (int i = 0; i < nbox; i++) {
+        for (int j = 0; j < nbox; j++) {
+            hcol1 -> Fill(i, j, pgridtn[i][j]);
+        }
+    }
+    hcol1->Draw("COLZ");
+
+
+    // L E G O   H I S T O G R A M  (pgridtn)
+    //
+    // Create Canvas (window)
+    auto c2    = new TCanvas("c2","c2",600,400);
+
+    // Create 2D Histogram with TH2F
+    //                     Name  | Title           | xbins | xmin | xmax | ybins | ymin | ymax
+    auto hcol2 = new TH2F("hcol2", "LEGO Histogram", nbox  , 0    , nbox , nbox  , 0    , nbox);
+
+    // Fill the 2D histogram with pgridtn values
+    for (int i = 0; i < nbox; i++) {
+        for (int j = 0; j < nbox; j++) {
+            hcol2 -> Fill(i, j, pgridtn[i][j]);
+        }
+    }
+    hcol2->Draw("LEGO2Z");  // Lego plot using colors
+    // hcol2->Draw("SURF7");  // Like LEGO but with softened lines and height map on top
+
+
+    //  1 D   H I S T O G R A M  (rpart)
+    //
+    // Create Canvas (window)
+    auto c3    = new TCanvas("c3","c3",600,400);
+
+    // Create 1D Histogram with TH1F
+    //                     Name  | Title            | xbins | xmin | xmax
+    auto hcol3 = new TH1F("hcol3", "rpart Histogram", nbox  , 0    , nbox);
+
+    // Fill the 1D histogram with rpart values
+    for (int i = 0; i < nbox; i++) {
+        hcol3 -> Fill(i, rpart[i]);
+    }
+
+    hcol3->Draw();
+
+
 
 }
 /*
