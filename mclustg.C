@@ -46,7 +46,7 @@
 #define foutd "xoutd.txt" //"p_e20_rcltx.txt" //
 
 //#define ngrid 1000
-#define nbox 200
+#define nbox 25
 #define len 1000. //m. Size of the box
 
 // using namespace std;
@@ -89,7 +89,7 @@ void mclustg::Loop()
 
    Long64_t nshow = fChain->GetEntriesFast();
     cout << " nshow: " << nshow << endl;
-   nshow = 10;   //-
+   nshow = 12;   //-
    cout << "nShowers " << nshow << endl;
     
    Long64_t nbytes = 0, nb = 0;
@@ -403,12 +403,16 @@ void mclustg::Loop()
        if (itree < 0) break;
        
        nb = fChain->GetEntry(itree);   nbytes += nb;
+
+       cout << "defined nb " << endl;
        
        // if (Cut(ientry) < 0) continue;
        eb  = b_shower_Energy->GetEntry(itree);        ebytes += eb;
        fb  = b_shower_FirstHeight->GetEntry(itree);   fbytes += fb;
        hb  = b_shower_Theta->GetEntry(itree);         hbytes += hb;
        tb  = b_shower_Phi->GetEntry(itree);           tbytes += tb;
+
+       cout << "defined tb and others " << endl;
        
        icont = -1; // index for total nb. of secondaries
     
@@ -1109,83 +1113,133 @@ ofpart<< mpcr  << "\t"
 // Estimamos densidades de particulas y sigmas correspondientes
 
 
+    //    ____  _       _       
+    //   |  _ \| | ___ | |_ ___ 
+    //   | |_) | |/ _ \| __/ __|
+    //   |  __/| | (_) | |_\__ \
+    //   |_|   |_|\___/ \__|___/
+    //                          
 
-    // =====================   P L O T S   ====================================== //
+    //   P G R I D 
+    // 2 D   H I S T O G R A M
+    // Create Canvas for pgrid
+    TCanvas* can_pgrid = new TCanvas("can_pgrid","PGRID",1000,400);
+    // Inside this canvas, we create two pads
+    TPad *lpad_pgrid = new TPad("lpad_pgrid","Left pad" ,0.0,1.0,0.5,0.0);
+    TPad *rpad_pgrid = new TPad("rpad_pgrid","Right pad",0.5,1.0,1.0,0.0);
+    lpad_pgrid->Draw();
+    rpad_pgrid->Draw();
 
-    // Create Total and normalized arrays pgrid and cgrid
-    Float_t pgridtn[nbox][nbox] = { 0 }; // pgrid total normalized 
-    Float_t cgridtn[nbox][nbox] = { 0 }; // cgrid total normalized  
-
-    for (int s=0; s<nshow; s++){
-        for (int i=0; i < nbox; i++) {
-            for (int j=0; j < nbox; j++) {
-                pgridtn[i][j] += (float)pgrid[s][i][j] / nshow;
-                cgridtn[i][j] += (float)cgrid[s][i][j] / nshow;
-                // if (pgrid[s][i][j] != 0) cout << "pgrid["<<s<<"]["<<i<<"]["<<j<<"] ("<<pgrid[s][i][j]<<") / nshow ("<<nshow<<") = "<< (float)pgrid[s][i][j] / nshow << endl;
+    // Create 2D Histogram with TH2F
+    //                      Name  | Title         | xbins | xmin | xmax | ybins | ymin | ymax
+    TH2F* hpgrid = new TH2F("hpgrid", "2D Histogram", nbox  , 0    , nbox , nbox  , 0    , nbox);
+    // Fill the 2D histogram with pgridtn values
+    for (int i = 0; i < nbox; i++) {
+        for (int j = 0; j < nbox; j++) {
+            for (int s = 0; s < nshow; s++) {
+                hpgrid -> Fill(i, j, pgrid[s][i][j]);
             }
         }
     }
+    // R E P R E S E N T   F L A T   H I S T O G R A M  (pgrid)
+    lpad_pgrid->cd();
+    hpgrid->Draw("COLZ");
+    // R E P R E S E N T   L E G O   H I S T O G R A M  (pgrid)
+    rpad_pgrid->cd();
+    // hpgrid->Draw("LEGO2Z");  // Lego plot using colors
+    hpgrid->Draw("SURF7");  // Like LEGO but with softened lines and height map on top
 
-    // cout << "pgridtn: [ ";
-    // for (int i=0; i < nbox; i++) {
-    //     for (int j=0; j < nbox; j++) {
-    //         if (pgridtn[i][j] != 0) cout << pgridtn[i][j] << ", ";
-    //     }
-    // }
-    // cout << "]" << endl;
 
-    // 2 D   H I S T O G R A M  (pgridtn)
-    //
-    // Create Canvas (window)
-    auto c1    = new TCanvas("c1","c1",600,400);
+    //   C G R I D 
+    // 2 D   H I S T O G R A M
+    // Create Canvas for cgrid
+    TCanvas* can_cgrid = new TCanvas("can_cgrid","CGRID",1000,400);
+    // Inside this canvas, we create two pads
+    TPad *lpad_cgrid = new TPad("lpad_cgrid","Left pad" ,0.0,1.0,0.5,0.0);
+    TPad *rpad_cgrid = new TPad("rpad_cgrid","Right pad",0.5,1.0,1.0,0.0);
+    lpad_cgrid->Draw();
+    rpad_cgrid->Draw();
 
     // Create 2D Histogram with TH2F
-    //                     Name  | Title         | xbins | xmin | xmax | ybins | ymin | ymax
-    auto hcol1 = new TH2F("hcol1", "2D Histogram", nbox  , 0    , nbox , nbox  , 0    , nbox);
-
+    //                      Name  | Title         | xbins | xmin | xmax | ybins | ymin | ymax
+    TH2F* hcgrid = new TH2F("hcgrid", "2D Histogram", nbox  , 0    , nbox , nbox  , 0    , nbox);
     // Fill the 2D histogram with pgridtn values
     for (int i = 0; i < nbox; i++) {
         for (int j = 0; j < nbox; j++) {
-            hcol1 -> Fill(i, j, pgridtn[i][j]);
+            for (int s = 0; s < nshow; s++) {
+                hpgrid -> Fill(i, j, cgrid[s][i][j]);
+            }
         }
     }
-    hcol1->Draw("COLZ");
-
-
-    // L E G O   H I S T O G R A M  (pgridtn)
-    //
-    // Create Canvas (window)
-    auto c2    = new TCanvas("c2","c2",600,400);
-
-    // Create 2D Histogram with TH2F
-    //                     Name  | Title           | xbins | xmin | xmax | ybins | ymin | ymax
-    auto hcol2 = new TH2F("hcol2", "LEGO Histogram", nbox  , 0    , nbox , nbox  , 0    , nbox);
-
-    // Fill the 2D histogram with pgridtn values
-    for (int i = 0; i < nbox; i++) {
-        for (int j = 0; j < nbox; j++) {
-            hcol2 -> Fill(i, j, pgridtn[i][j]);
-        }
-    }
-    hcol2->Draw("LEGO2Z");  // Lego plot using colors
+    // R E P R E S E N T   F L A T   H I S T O G R A M  (cgrid)
+    lpad_cgrid->cd();
+    hcgrid->Draw("COLZ");
+    // R E P R E S E N T   L E G O   H I S T O G R A M  (cgrid)
+    rpad_cgrid->cd();
+    hcgrid->Draw("LEGO2Z");  // Lego plot using colors
     // hcol2->Draw("SURF7");  // Like LEGO but with softened lines and height map on top
 
 
-    //  1 D   H I S T O G R A M  (rpart)
+    //  1 D   H I S T O G R A M
     //
     // Create Canvas (window)
-    auto c3    = new TCanvas("c3","c3",600,400);
+    TCanvas* can_part = new TCanvas("can_part","1D Histograms",600,600);
+    TPad *pad1 = new TPad("pad1","Pad 1",0.0,0.8,1.0,1.0);
+    TPad *pad2 = new TPad("pad2","Pad 2",0.0,0.6,1.0,0.8);
+    TPad *pad3 = new TPad("pad3","Pad 3",0.0,0.4,1.0,0.6);
+    TPad *pad4 = new TPad("pad4","Pad 4",0.0,0.2,1.0,0.4);
+    TPad *pad5 = new TPad("pad5","Pad 5",0.0,0.0,1.0,0.2);
+    pad1->Draw();
+    pad2->Draw();
+    pad3->Draw();
+    pad4->Draw();
+    pad5->Draw();
 
+    //  R P A R T 
+    pad1->cd();
     // Create 1D Histogram with TH1F
     //                     Name  | Title            | xbins | xmin | xmax
-    auto hcol3 = new TH1F("hcol3", "rpart Histogram", nbox  , 0    , nbox);
-
+    TH1F* hrpart= new TH1F("hrpart", "rpart Histogram", nbox  , 0    , nbox);
     // Fill the 1D histogram with rpart values
     for (int i = 0; i < nbox; i++) {
-        hcol3 -> Fill(i, rpart[i]);
+        hrpart -> Fill(i, rpart[i]);
     }
+    hrpart->Draw("HISTZ");
 
-    hcol3->Draw();
+    //  R C L S T
+    pad2->cd();
+    // Create 1D Histogram with TH1F
+    //                     Name  | Title            | xbins | xmin | xmax
+    TH1F* hrclst = new TH1F("hrclst", "rclst Histogram", nbox  , 0    , nbox);
+    // Fill the 1D histogram with rclst values
+    for (int i = 0; i < nbox; i++) {
+        hrclst -> Fill(i, rclst[i]);
+    }
+    hrclst->Draw("COLZ");
+
+    // R C L T E
+    pad3->cd();
+    TH1F* hrclte = new TH1F("hrclte", "rclte Histogram", nbox  , 0    , nbox);
+    for (int i = 0; i < nbox; i++) {
+        hrclte -> Fill(i, rclte[i]);
+    }
+    hrclte->Draw("HIST");
+
+    // R C L T M
+    pad4->cd();
+    TH1F* hrcltm = new TH1F("hrcltm", "rcltm Histogram", nbox  , 0    , nbox);
+    for (int i = 0; i < nbox; i++) {
+        hrcltm -> Fill(i, rcltm[i]);
+    }
+    hrcltm->Draw("HIST");
+
+    // R C L T X
+    pad5->cd();
+    TH1F* hrcltx = new TH1F("hrcltx", "rcltx Histogram", nbox  , 0    , nbox);
+    for (int i = 0; i < nbox; i++) {
+        hrcltx -> Fill(i, rcltx[i]);
+    }
+    hrcltx->Draw("HIST");
 
 
 
