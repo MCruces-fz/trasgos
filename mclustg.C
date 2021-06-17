@@ -1146,8 +1146,8 @@ ofpart<< mpcr  << "\t"
     hpgrid->Draw("COLZ");
     // R E P R E S E N T   L E G O   H I S T O G R A M  (pgrid)
     rpad_pgrid->cd();
-    // hpgrid->Draw("LEGO2Z");  // Lego plot using colors
-    hpgrid->Draw("SURF7");  // Like LEGO but with softened lines and height map on top
+    hpgrid->Draw("LEGO2Z");  // Lego plot using colors
+    // hpgrid->Draw("SURF7");  // Like LEGO but with softened lines and height map on top
 
 
     //   C G R I D 
@@ -1204,7 +1204,7 @@ ofpart<< mpcr  << "\t"
     for (int i = 0; i < nbox; i++) {
         hrpart -> Fill(i, rpart[i]);
     }
-    hrpart->Draw("HISTZ");
+    hrpart->Draw("HIST");
 
     //  R C L S T
     pad2->cd();
@@ -1215,7 +1215,7 @@ ofpart<< mpcr  << "\t"
     for (int i = 0; i < nbox; i++) {
         hrclst -> Fill(i, rclst[i]);
     }
-    hrclst->Draw("COLZ");
+    hrclst->Draw("HIST");
 
     // R C L T E
     pad3->cd();
